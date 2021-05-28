@@ -1,8 +1,20 @@
 #ifndef GAME_H_
 #define GAME_H_
 
-typedef struct game_data_t *GameData;
-typedef struct game_key_t *GameKey;
+// the data each game contains
+typedef struct game_data_t
+{
+    Winner winner;
+    int game_length;
+} *GameData;
+
+// the key to compare different games in a map
+typedef struct game_key_t
+{
+    int first_player_id;
+    int second_player_id;
+}*GameKey;
+
 GameData gameDataCreate(Winner winner, int game_length);
 GameKey gameKeyCreate(int first_id, int second_id);
 

@@ -1,8 +1,25 @@
 #ifndef TOURNAMENT_H_
 #define TOURNAMENT_H_
 
-typedef struct tournament_data_t *TournamentData;
-typedef struct tournament_key_t *TournamentKey;
+
+// the data each tournament contains
+typedef struct tournament_data_t
+{
+    const char* location;
+    int winner;
+    int max_games_per_player;
+    Map games_map;
+    Map players_map;
+    bool ended;
+    int players_count;    
+}*TournamentData;
+
+// the key to compare different tournaments in a map
+typedef struct tournament_key_t
+{
+    int key;
+} *TournamentKey;
+
 TournamentData tournamentDataCreate(const char* location, int winner, int max_games_per_player);
 TournamentKey tournamentKeyCreate(int ID);
 

@@ -1,8 +1,24 @@
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
-typedef struct player_data_t *PlayerData;
-typedef struct player_key_t *PlayerKey;
+// the data on each player in the players map 
+typedef struct player_data_t
+{
+    int games_length;
+    int games_count;
+    int num_wins;
+    int num_losses;
+    int num_draws;
+    int level;
+}*PlayerData;
+
+// the key of player for the players map
+typedef struct player_key_t
+{
+    int player_id;
+    bool deleted;
+}*PlayerKey;
+
 PlayerData playerDataCreate();
 PlayerKey playerKeyCreate(int player_id);
 

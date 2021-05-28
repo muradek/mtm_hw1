@@ -10,19 +10,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-// the data each game contains
-struct game_data_t
-{
-    Winner winner;
-    int game_length;
-};
-
-// the key to compare different games in a map
-struct game_key_t
-{
-    int first_player_id;
-    int second_player_id;
-};
 
 // function that creats game data element
 GameData gameDataCreate(Winner winner, int game_length)

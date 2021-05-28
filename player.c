@@ -10,24 +10,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-// the data on each player in the players map 
-struct player_data_t
-{
-    int games_length;
-    int games_count;
-    int num_wins;
-    int num_losses;
-    int num_draws;
-    int level;
-};
-
-// the key of player for the players map
-struct player_key_t
-{
-    int player_id;
-    bool deleted;
-};
-
 // function to create player's data element
 PlayerData playerDataCreate()
 {

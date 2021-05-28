@@ -10,23 +10,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-//the data each tournament contains
-struct tournament_data_t
-{
-    const char* location;
-    int winner;
-    int max_games_per_player;
-    Map games_map;
-    Map players_map;
-    bool ended;
-    int players_count;
-};
-
-//the key to compare different tournaments in a map
-struct tournament_key_t
-{
-    int key;
-};
 
 //functions to create Data&Key structs
 TournamentData tournamentDataCreate(const char* location, int winner, int max_games_per_player)
