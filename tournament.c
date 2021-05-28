@@ -1,5 +1,6 @@
 #include "map.h"
 #include "chessSystem.h"
+#include "player.h"
 #include "tournament.h"
 #include "game.h"
 

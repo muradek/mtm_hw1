@@ -4,7 +4,7 @@
 typedef struct game_data_t *GameData;
 typedef struct game_key_t *GameKey;
 GameData gameDataCreate(Winner winner, int game_length);
-GameKey gameKeyCreate(int first_id, int secind_id);
+GameKey gameKeyCreate(int first_id, int second_id);
 
 GameData copyGameData(GameData old_game);
 GameKey copyGameKey(GameKey old_game);

@@ -1,5 +1,6 @@
 #include "map.h"
 #include "chessSystem.h"
+#include "player.h"
 #include "tournament.h"
 #include "game.h"
 
@@ -9,21 +10,21 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-//the data each game contains
+// the data each game contains
 struct game_data_t
 {
     Winner winner;
     int game_length;
 };
 
-//the key to compare different games in a map
+// the key to compare different games in a map
 struct game_key_t
 {
     int first_player_id;
     int second_player_id;
 };
 
-//functions that creat Data&Key structs
+// function that creats game data element
 GameData gameDataCreate(Winner winner, int game_length)
 {
     GameData game_data= malloc(sizeof(*game_data));
@@ -36,7 +37,8 @@ GameData gameDataCreate(Winner winner, int game_length)
     return game_data;
 }
 
-GameKey gameKeyCreate(int first_id, int secind_id)
+// function that creats game key element
+GameKey gameKeyCreate(int first_id, int second_id)
 {
     GameKey game_key= malloc(sizeof(*game_key));
     if (!game_key)
@@ -44,7 +46,7 @@ GameKey gameKeyCreate(int first_id, int secind_id)
         return NULL;
     }
     game_key->first_player_id=first_id;
-    game_key->second_player_id=secind_id;
+    game_key->second_player_id=second_id;
     return game_key;
 }
 
