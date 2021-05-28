@@ -3,7 +3,7 @@
 
 typedef struct tournament_data_t *TournamentData;
 typedef struct tournament_key_t *TournamentKey;
-TournamentData tournamentDataCreate(const char* location, int winner, int max_games_per_player, Map game_map);
+TournamentData tournamentDataCreate(const char* location, int winner, int max_games_per_player);
 TournamentKey tournamentKeyCreate(int ID);
 
 TournamentData copyTournamentData(TournamentData old_data);
