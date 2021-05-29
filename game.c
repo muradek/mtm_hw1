@@ -40,7 +40,11 @@ GameKey gameKeyCreate(int first_id, int second_id)
 //functions for a Map of games
 GameData copyGameData(GameData old_game)
 {
-    GameData new_game=malloc(sizeof(*new_game)); //is this ok? is it necessary? 
+    GameData new_game=malloc(sizeof(*new_game));
+    if (!new_game)
+    {
+        return NULL;
+    }
     new_game->winner=old_game->winner;
     new_game->game_length=old_game->game_length;
     return new_game;
