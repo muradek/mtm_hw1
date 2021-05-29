@@ -10,7 +10,9 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-
+// function that check the Location input
+// returns true if its valid
+// returns false if it invalid 
 static bool checkLocation(const char* location)
 {
     if (strlen(location)<=0)
@@ -40,6 +42,95 @@ struct chess_system_t
     Map games_map;
     Map players_map;
 };
+
+// function that inserts players into players_map of chess&tournament
+void insertPlayersToMaps(int first_player, int second_player, int play_time, TournamentKey tournament_key,
+     TournamentData tournament_data, Winner winner, ChessSystem chess)
+{
+    // create players new key elements to find them in the maps
+    PlayerKey first_player_key = playerKeyCreate(first_player);
+    PlayerKey second_player_key = playerKeyCreate(second_player);
+
+    // create players new data elements to insert/update
+    PlayerData first_player_tournament_data;
+    PlayerData first_player_chess_data;
+    PlayerData second_player_tournament_data;
+    PlayerData second_player_chess_data;
+
+    // if the players are in the system, get the data.
+    // else, initialize them
+    if (mapContains(chess->players_map, first_player_key))
+    {
+        first_player_chess_data = mapGet(chess->players_map, first_player_key);
+    }
+    else
+    {
+        first_player_chess_data = playerDataCreate();
+    }
+
+    if (mapContains(chess->players_map, second_player_key))
+    {
+        second_player_chess_data = mapGet(chess->players_map, second_player_key);
+    }
+    else
+    {
+        second_player_chess_data = playerDataCreate();
+    }
+
+    // if the players are in the tournament, get the data
+    // else, initialize them
+    if (mapContains(tournament_data->players_map, first_player_key))
+    {
+        first_player_tournament_data = mapGet(tournament_data->players_map, first_player_key);
+    }
+    else
+    {
+        first_player_tournament_data = playerDataCreate();
+    }
+
+    if (mapContains(tournament_data->players_map, second_player_key))
+    {
+        second_player_tournament_data = mapGet(tournament_data->players_map, second_player_key);
+    }
+    else{
+        second_player_tournament_data = playerDataCreate();
+    }
+
+    // update the data of the players in the tournament&chess
+    first_player_chess_data->games_count+=1;
+    first_player_chess_data->games_length+= play_time;
+    first_player_tournament_data->games_count+=1;
+    first_player_tournament_data->games_length+= play_time;
+
+    second_player_chess_data->games_count+=1;
+    second_player_chess_data->games_length+= play_time;
+    second_player_tournament_data->games_count+=1;
+    second_player_tournament_data->games_length+= play_time;    
+
+    if (winner == FIRST_PLAYER)
+    {
+        first_player_chess_data->num_wins+=1;
+        first_player_tournament_data->num_wins+=1;
+        second_player_chess_data->num_losses+=1;
+        second_player_tournament_data->num_losses+=1;
+    }
+    if (winner == SECOND_PLAYER)
+    {
+        first_player_chess_data->num_losses+=1;
+        first_player_tournament_data->num_losses+=1;
+        second_player_chess_data->num_wins+=1;
+        second_player_tournament_data->num_wins+=1;
+    }
+    if (winner == DRAW)
+    {
+        first_player_chess_data->num_draws+=1;
+        first_player_tournament_data->num_draws+=1;
+        second_player_chess_data->num_draws+=1;
+        second_player_tournament_data->num_draws+=1;
+    }
+
+    //mapPut???
+}
 
 ChessSystem chessCreate()
 {
@@ -108,7 +199,7 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
     return CHESS_SUCCESS;
 }
 
-/* 
+/
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player, Winner winner, int play_time)
 {
     if (tournament_id <= 0 || first_player <= 0 || second_player <= 0 || first_player == second_player)
@@ -159,64 +250,32 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     mapPut(chess->games_map, game_key, game_data);
     mapPut(tournament_data->games_map, game_key, game_data);
 
-    // create players new elements for the cases of which they are not in the system/tournament
-    PlayerKey first_player_key = playerKeyCreate(first_player);
-    PlayerData first_player_data = playerDataCreate();
-    PlayerKey second_player_key = playerKeyCreate(second_player);
-    PlayerData second_player_data = playerDataCreate();
-
-
-    // if the players are not in the system, insert them to both maps
-    if (!mapContains(chess->players_map, first_player_key))
-    {
-        mapPut(chess->players_map, first_player_key, first_player_data);
-        mapPut(tournament_data->players_map, first_player_key, first_player_data);
-    }
-        
-    if (!mapContains(chess->players_map, second_player_key))
-    {
-        mapPut(chess->players_map, second_player_key, second_player_data);
-        mapPut(tournament_data, second_player_key, second_player_data);
-    }
-
-    // if the players are in the system but not in the tournament, insert only to the tournament map
-    if (mapContains(chess->players_map, first_player_key) && !mapContains(tournament_data->players_map, first_player_key))
-    {
-        mapPut(tournament_data->players_map, first_player_key, first_player_data);
-    }
-
-    if (mapContains(chess->players_map, second_player_key) && !mapContains(tournament_data->players_map, second_player_key))
-    {
-        mapPut(tournament_data->players_map, second_player_key, second_player_data);
-    }
-
-    // at this point, both players are in the system&tournament for sure
-    // update their data
-
-
-
-       
-
-    
-
-
+    //
     return CHESS_SUCCESS;
 }
+*/
 
- */
-
-
-
+/*
 int main()
 {
-    ChessSystem cs = chessCreate();
+    PlayerKey pk1 = playerKeyCreate(1);
+    PlayerData pd1 = playerDataCreate();
 
-    chessAddTournament(cs, 1, 1, "Eilat");    
+    Map players_map = mapCreate((copyMapDataElements) &copyPlayerData, (copyMapKeyElements) &copyPlayerKey,
+    (freeMapDataElements) &freePlayerData, (freeMapKeyElements) &freePlayerKey, (compareMapKeyElements) &comparePlayerKey);
 
-    chessDestroy(cs);
-    
+    mapPut(players_map, pk1, pd1);
+
+    PlayerData pd2 = mapGet(players_map, pk1);
+
+    pd2->games_count+= 11;
+
+    printf("%d\n", ((PlayerData)mapGet(players_map, pk1))->games_count);
+    printf("%d\n", pd2->games_count);
+
     return 0;
 }
+*/
 
 // int main()
 // {

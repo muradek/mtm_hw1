@@ -67,7 +67,7 @@ PlayerKey copyPlayerKey(PlayerKey old_player)
         return NULL;
     }
     new_player->player_id = old_player->player_id;
-    new_player->deleted = old_player->player_id;
+    new_player->deleted = old_player->deleted;
     return new_player;
 }
 
