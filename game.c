@@ -32,8 +32,9 @@ GameKey gameKeyCreate(int first_id, int second_id)
     {
         return NULL;
     }
-    game_key->first_player_id=first_id;
-    game_key->second_player_id=second_id;
+    game_key->first_player_id = first_id;
+    game_key->second_player_id = second_id;
+    game_key->player_deleted = false;
     return game_key;
 }
 
@@ -57,8 +58,9 @@ GameKey copyGameKey(GameKey old_game)
     {
         return NULL;
     }
-    new_game->first_player_id= old_game->first_player_id;
-    new_game->second_player_id= old_game->second_player_id;
+    new_game->first_player_id = old_game->first_player_id;
+    new_game->second_player_id = old_game->second_player_id;
+    new_game->player_deleted = old_game->player_deleted;
     return new_game;
 }
 
@@ -74,13 +76,14 @@ void freeGameKey(GameKey key_to_free)
 
 int compareGameKey(GameKey key_1, GameKey key_2)
 {
-    if((key_1->first_player_id==key_2->first_player_id && key_1->second_player_id==key_2->second_player_id) || 
-        (key_1->first_player_id==key_2->second_player_id && key_1->second_player_id==key_2->first_player_id))
+    if((key_1->player_deleted == key_2->player_deleted) &&
+    ((key_1->first_player_id==key_2->first_player_id && key_1->second_player_id==key_2->second_player_id) || 
+    (key_1->first_player_id==key_2->second_player_id && key_1->second_player_id==key_2->first_player_id)))
         {
             return 0;
         }
 
-    else if (key_1->first_player_id>key_2->first_player_id) //is it ok?
+    if (key_1->first_player_id + key_1->second_player_id >= key_2->first_player_id + key_2->second_player_id)
     {
         return 1;
     }

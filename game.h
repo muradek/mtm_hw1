@@ -13,6 +13,7 @@ typedef struct game_key_t
 {
     int first_player_id;
     int second_player_id;
+    bool player_deleted;
 }*GameKey;
 
 GameData gameDataCreate(Winner winner, int game_length);

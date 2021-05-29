@@ -150,10 +150,9 @@ void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournam
         GameData game_data = (GameData)mapGet(tournament_data->games_map, game_key);
         if (game_key->first_player_id == player_id)
         {
+            game_key->player_deleted = true;
             PlayerKey sec_player_key = playerKeyCreate(game_key->second_player_id);
-            PlayerData sec_player_data = (PlayerData)mapGet(tournament_data->games_map, sec_player_key);
-            // game_data->player_is_deleted = true;
-
+            PlayerData sec_player_data = (PlayerData)mapGet(tournament_data->players_map, sec_player_key);
             if (game_data->winner == FIRST_PLAYER)
             {
                 sec_player_data->num_losses -= 1;
@@ -164,15 +163,15 @@ void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournam
                 sec_player_data->num_draws -= 1;
                 sec_player_data->num_wins += 1;
             }
-            freePlayerKey(sec_player_key);
-            freePlayerData(sec_player_data);
+            //freePlayerKey(sec_player_key);
+            //freePlayerData(sec_player_data);
             
         }
         if (game_key->second_player_id == player_id)
         {
+            game_key->player_deleted = true;
             PlayerKey first_player_key = playerKeyCreate(game_key->first_player_id);
             PlayerData first_player_data = (PlayerData)mapGet(tournament_data->games_map, first_player_key);
-            // game_data->player_is_deleted = true;
 
             if (game_data->winner == SECOND_PLAYER)
             {
@@ -184,12 +183,12 @@ void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournam
                 first_player_data->num_draws -= 1;
                 first_player_data->num_wins += 1;
             }
-            freePlayerKey(first_player_key);
-            freePlayerData(first_player_data);            
+            //freePlayerKey(first_player_key);
+            //freePlayerData(first_player_data);            
         }
         game_key = (GameKey)mapGetNext(tournament_data->games_map);
     }
-    freeGameKey(game_key); // is thie enough? or shoul i use every iteration?
+    freeGameKey(game_key); // is thie enough? or should i use every iteration?
 }    
 
 ChessSystem chessCreate()
@@ -376,12 +375,14 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         return CHESS_INVALID_ID;
     }
     
-    if (!mapContains(chess->players_map, player_id))
+    PlayerKey player_key = playerKeyCreate(player_id);
+
+    if (!mapContains(chess->players_map, player_key))
     {
+        freePlayerKey(player_key);
         return CHESS_PLAYER_NOT_EXIST;
     }
 
-    PlayerKey player_key = playerKeyCreate(player_id);
     // iterate system's tournaments to remove the player from all
     TournamentKey tournament_key = (TournamentKey)mapGetFirst(chess->tournaments_map);
     while (tournament_key != NULL)
@@ -400,16 +401,44 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
     return CHESS_SUCCESS;
 }
 
+ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
+{
+    // check input
+    if(tournament_id <= 0)
+    {
+        return CHESS_INVALID_ID;
+    }
+
+    TournamentKey tournament_to_end_key = tournamentKeyCreate(tournament_id);
+    if (!mapContains(chess->tournaments_map, tournament_to_end_key))
+    {   
+        freeTournamentKey(tournament_to_end_key);
+        return CHESS_TOURNAMENT_NOT_EXIST;
+    }
+
+    TournamentData tournament_to_end_data = (TournamentData)mapGet(chess->tournaments_map, tournament_to_end_key);
+    if (tournament_to_end_data->ended)
+    {
+        freeTournamentKey(tournament_to_end_key);
+        return CHESS_TOURNAMENT_ENDED;
+    }
+    if(mapGetSize(tournament_to_end_data->games_map) == 0)
+    {
+        freeTournamentKey(tournament_to_end_key);
+        return CHESS_NO_GAMES;
+    }
+
+}
+
+
 int main()
 {
     ChessSystem cs = chessCreate();
 
     printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
-    //printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
-    //printf("%d\n", chessAddTournament(cs, 1, 2, "Eilat"));
     printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 15));
-    printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 15));
-
-    // chessDestroy(cs);  
+    printf("%d\n", chessRemovePlayer(cs, 1));
+    printf("%d\n", chessRemoveTournament(cs, 2));
+    // printf("%d\n",);
     return 0;
 }
