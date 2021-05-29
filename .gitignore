@@ -1,5 +1,7 @@
 test_utilities.h
 ztests.c
 cmakelists.txt
+mapTests.txt
+maptestss.c
 build/
 .vscode/

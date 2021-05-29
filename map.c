@@ -1,4 +1,8 @@
 //
+// Created by Yousef  Abuakell on 29/05/2021.
+//
+
+//
 //  map.c
 //  hw12021
 //
@@ -10,8 +14,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-
-
 #define EMPTY_POINTER -1
 
 
@@ -34,11 +36,11 @@ struct Map_t {
     Node iterator;
     Node first_node;
 };
- Map mapCreate(copyMapDataElements copyDataElement,
+Map mapCreate(copyMapDataElements copyDataElement,
               copyMapKeyElements copyKeyElement,
               freeMapDataElements freeDataElement,
               freeMapKeyElements freeKeyElement,
-          compareMapKeyElements compareKeyElements)
+              compareMapKeyElements compareKeyElements)
 {
     if( !copyDataElement || !copyKeyElement || !freeKeyElement || !freeDataElement || !compareKeyElements){
         return  NULL;
@@ -47,9 +49,9 @@ struct Map_t {
     if(map == NULL){
         return NULL;
     }
-    
-    
-   
+
+
+
     map->current_index = 0;
     map->CopyDataElement = copyDataElement;
     map->CopyKeyElement = copyKeyElement;
@@ -78,7 +80,7 @@ void mapDestroy(Map map){
     if(map == NULL){
         return ;
     }
-     mapClear(map);
+    mapClear(map);
     free(map);
 }
 Map mapCopy(Map map){
@@ -89,9 +91,9 @@ Map mapCopy(Map map){
         return NULL;
     }
     Node current_node = map->first_node;
-    while(current_node->next_node != NULL)
+    while(current_node != NULL)
     {
-        mapPut(map_copy, current_node->KeyElement, current_node->DataElement);
+        mapPut(map_copy, map->CopyKeyElement(current_node->KeyElement), map->CopyDataElement(current_node->DataElement));
         current_node=current_node->next_node;
     }
     map->iterator = NULL;
@@ -103,23 +105,27 @@ int mapGetSize(Map map){
         return EMPTY_POINTER;
     }
     Node current = map->first_node;
+    if(map->first_node==NULL){
+        return 0;
+    }
     int i = 0;
     while(current){
         i++;
         current=current->next_node;
     }
-return (i);
-    
+    return (i);
+
 }
 MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){// check if it
-    if(map == NULL|| keyElement == NULL){
+    if(map == NULL|| keyElement == NULL|| dataElement==NULL){
         return MAP_NULL_ARGUMENT;
     }
-   Node current_node = map->first_node;
+    Node current_node = map->first_node;
     if(mapContains(map, keyElement)){// if the key is already in the map
         while(current_node){
             if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
-                current_node->DataElement = dataElement;
+                map->FreeDataElement(current_node->DataElement);
+                current_node->DataElement = map->CopyDataElement(dataElement);; // we should use copyDataelement
                 return MAP_SUCCESS;
             }
             current_node=current_node->next_node;
@@ -130,7 +136,7 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){
     MapKeyElement newKeyElement = map->CopyKeyElement(keyElement);
     if( newDataElement == NULL || newKeyElement == NULL || new_node==NULL){
         free(newDataElement);
-        free(new_node);
+        free(newKeyElement);
         free(new_node);
         return MAP_OUT_OF_MEMORY;
     }
@@ -139,16 +145,16 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){
     // if the map is empty
     if(map->first_node == NULL){
         map->first_node = new_node;
-        
+
         return MAP_SUCCESS;
     }
-    
+
     // if we want to insert a key as the head
     if (map->CompareKeyElements(keyElement,map->first_node->KeyElement)<0)
     {
         new_node->next_node= map->first_node;
         map->first_node=new_node;
-        
+
         return MAP_SUCCESS;
     }
     // if we want to insert the key in the end of the list.
@@ -158,7 +164,6 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){
     }
     if(map->CompareKeyElements(keyElement,node_iterator->KeyElement)>0){
         node_iterator->next_node=new_node;
-       
         return MAP_SUCCESS;
     }
     // if its in the middle
@@ -192,17 +197,17 @@ MapResult mapClear(Map map){
         return MAP_NULL_ARGUMENT;
     }
     if(map->first_node == NULL){//if the map is already clean
-       return MAP_SUCCESS;
+        return MAP_SUCCESS;
     }
     Node current_node = map->first_node;
     while(current_node){
         Node toDelete= current_node;
         current_node= current_node->next_node;
-        map->FreeKeyElement(toDelete->KeyElement);
         map->FreeDataElement(toDelete->DataElement);
+        map->FreeKeyElement(toDelete->KeyElement);
         free(toDelete);
     }
-    
+    map->first_node=current_node;
     return MAP_SUCCESS;
 }
 MapResult mapRemove(Map map, MapKeyElement keyElement){
@@ -211,34 +216,35 @@ MapResult mapRemove(Map map, MapKeyElement keyElement){
     }
     Node current_node = map->first_node; // if the key we want to remove is the first in the linked list
     if(map->CompareKeyElements(keyElement,map->first_node->KeyElement)==0){
-        map->first_node=map->first_node->next_node;
-        free(current_node->KeyElement);
-        free(current_node->DataElement);
+        map->FreeKeyElement(current_node->KeyElement);
+        map->FreeDataElement(current_node->DataElement);
+        map->first_node=current_node->next_node;
         free(current_node);
         return MAP_SUCCESS;
     }
     // if the key is in the middle
-       while(current_node->next_node){
-        if(map->CompareKeyElements(keyElement,current_node->next_node->KeyElement)==0 && current_node->next_node->next_node){
-            current_node->next_node = current_node->next_node->next_node;
-            map->FreeKeyElement(current_node->next_node->KeyElement);
-            map->FreeDataElement(current_node->next_node->DataElement);
-            return MAP_SUCCESS;
-        }
-           current_node=current_node->next_node;
-       }
-   //if the key is the last one in the linked list
     while(current_node->next_node){
-        if(map->CompareKeyElements(keyElement,current_node->next_node->KeyElement)==0){
+        if(map->CompareKeyElements(keyElement,current_node->next_node->KeyElement)==0 && current_node->next_node->next_node){
+            Node to_remove = current_node->next_node;
+            current_node->next_node = current_node->next_node->next_node;
+            to_remove->next_node =NULL;
             map->FreeKeyElement(current_node->next_node->KeyElement);
             map->FreeDataElement(current_node->next_node->DataElement);
-            free(current_node->next_node);
-            current_node->next_node = NULL;
             return MAP_SUCCESS;
         }
+        current_node=current_node->next_node;
     }
+    //if the key is the last one in the linked list
+
+        if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
+            map->FreeKeyElement(current_node->KeyElement);
+            map->FreeDataElement(current_node->DataElement);
+            free(current_node);
+            return MAP_SUCCESS;
+        }
     map->iterator=NULL;
-           return MAP_ITEM_DOES_NOT_EXIST;
+
+    return MAP_ITEM_DOES_NOT_EXIST;
 }
 MapDataElement mapGet(Map map, MapKeyElement keyElement){
     if(map == NULL || keyElement == NULL){
@@ -260,7 +266,7 @@ MapKeyElement mapGetFirst(Map map){
         return NULL;
     }
     map->iterator = map->first_node;
-    return map->iterator->KeyElement;
+    return map->CopyKeyElement(map->iterator->KeyElement);
 }
 MapKeyElement mapGetNext(Map map){
     if (map==NULL || map->iterator==NULL || map->iterator->next_node==NULL)
@@ -268,8 +274,7 @@ MapKeyElement mapGetNext(Map map){
         return NULL;
     }
     map->iterator=map->iterator->next_node;
-    
-    return map->iterator->KeyElement;
+    return map->CopyKeyElement(map->iterator->KeyElement);
 }
 
 
