@@ -108,6 +108,7 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
     return CHESS_SUCCESS;
 }
 
+/* 
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player, Winner winner, int play_time)
 {
     if (tournament_id <= 0 || first_player <= 0 || second_player <= 0 || first_player == second_player)
@@ -202,7 +203,61 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     return CHESS_SUCCESS;
 }
 
+ */
+
+
+
 int main()
 {
+    ChessSystem cs = chessCreate();
+
+    chessAddTournament(cs, 1, 1, "Eilat");    
+
+    chessDestroy(cs);
+    
     return 0;
 }
+
+// int main()
+// {
+//     GameData gd= gameDataCreate(FIRST_PLAYER, 17);
+//     GameKey gk= gameKeyCreate(10, 20);
+//     printf("%d\n", gk->first_player_id);
+
+//     GameData gd2= gameDataCreate(FIRST_PLAYER, 20);
+//     GameKey gk2= gameKeyCreate(15, 20);
+
+//     Map game_map = mapCreate((copyMapDataElements) &copyGameData, (copyMapKeyElements) &copyGameKey, 
+//         (freeMapDataElements) &freeGameData, (freeMapKeyElements) &freeGameKey, (compareMapKeyElements) &compareGameKey);
+
+//     Map game_map_2 = mapCreate((copyMapDataElements) &copyGameData, (copyMapKeyElements) &copyGameKey, 
+//         (freeMapDataElements) &freeGameData, (freeMapKeyElements) &freeGameKey, (compareMapKeyElements) &compareGameKey);
+
+//     mapPut(game_map, gk, gd);
+//     mapPut(game_map, gk2, gd2);
+
+//     mapPut(game_map_2, gk, gd);
+//     mapPut(game_map_2, gk2, gd2);
+
+//     mapDestroy(game_map);
+//     mapDestroy(game_map_2);
+
+//     gk->first_player_id = 10;
+
+//     printf("%d\n", mapContains(game_map, gk));
+
+
+//     TournamentData td= tournamentDataCreate("Eilat", 15, 2);
+//     TournamentKey tk= tournamentKeyCreate(17);
+
+//     TournamentData td2= copyTournamentData(td);
+//     TournamentKey tk2= tournamentKeyCreate(15);
+
+
+//     Map tournament_map= mapCreate((copyMapDataElements) &copyTournamentData, (copyMapKeyElements) &copyTournamentKey, 
+//         (freeMapDataElements) &freeTournamentData, (freeMapKeyElements) &freeTournamentKey, (compareMapKeyElements) &compareTournamentKey);
+
+//     mapPut(tournament_map, tk, td);
+//     mapPut(tournament_map, tk2, td2);
+//     return 0;
+// }

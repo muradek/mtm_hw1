@@ -76,7 +76,7 @@ void freeTournamentData(TournamentData data_to_free)
 {
     mapDestroy(data_to_free->games_map);
     mapDestroy(data_to_free->players_map);
-    free((void*)(data_to_free->location));
+    //free((void*)(data_to_free->location));
     free(data_to_free);
 }
 
