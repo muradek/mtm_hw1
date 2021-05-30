@@ -490,17 +490,64 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
     return CHESS_SUCCESS;
 }
 
+double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
+{
+    // check input
+    if (player_id <= 0)
+    {
+        *chess_result = CHESS_INVALID_ID;
+        return 0;
+    }
+
+    PlayerKey player_key = playerKeyCreate(player_id);
+    if (!mapContains(chess->players_map, player_key))
+    {
+        freePlayerKey(player_key);
+        *chess_result = CHESS_PLAYER_NOT_EXIST;
+        return 0;
+    }
+
+    double average_play_time;
+    PlayerData player_data = (PlayerData)mapGet(chess->players_map, player_key);
+    if (player_data->games_count == 0)
+    {
+        average_play_time = 0;
+    }
+    else
+    {
+        average_play_time = ((double)(player_data->games_length))/((double)(player_data->games_count));
+    }
+    
+    *chess_result = CHESS_SUCCESS;
+    return average_play_time;
+}
+
+ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
+{
+    // set each player's level
+
+    // sort all players by level and id
+
+    // print sorted array to the file
+}
+
 int main()
 {
     ChessSystem cs = chessCreate();
 
     printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
-    printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 15));
-    printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 15));
-    printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 15));
-    printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 15));
+    printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 10));
+    printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 20));
+    printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 100));
+    printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 50));
 
+    ChessResult* cs_result = malloc(sizeof(*cs_result));
+    printf("player: %d, avg: time: %f\n", 1, chessCalculateAveragePlayTime(cs, 1, cs_result));
+    printf("player: %d, avg: time: %f\n", 2, chessCalculateAveragePlayTime(cs, 2, cs_result));
+    printf("player: %d, avg: time: %f\n", 3, chessCalculateAveragePlayTime(cs, 3, cs_result));
+    printf("player: %d, avg: time: %f\n", 4, chessCalculateAveragePlayTime(cs, 4, cs_result));
 
+/* 
     PlayerKey key_1 = playerKeyCreate(1);
     PlayerData data_1 = (PlayerData)mapGet(cs->players_map, key_1);
     PlayerKey key_2 = playerKeyCreate(2);
@@ -510,6 +557,7 @@ int main()
     PlayerKey key_4 = playerKeyCreate(4);
     PlayerData data_4 = (PlayerData)mapGet(cs->players_map, key_4);
 
+
     printf("player: %d, wins: %d, draws: %d, losses: %d\n"
             ,key_1->player_id, data_1->num_wins, data_1->num_draws, data_1->num_losses);
     printf("player: %d, wins: %d, draws: %d, losses: %d\n"
@@ -518,14 +566,14 @@ int main()
             ,key_3->player_id, data_3->num_wins, data_3->num_draws, data_3->num_losses);
     printf("player: %d, wins: %d, draws: %d, losses: %d\n"
             ,key_4->player_id, data_4->num_wins, data_4->num_draws, data_4->num_losses);
-/* 
-    
-    printf("%d\n", chessAddGame(cs, 2, 2, 4, DRAW, 15));
+
+ 
     printf("%d\n", chessEndTournament(cs, 2));
     TournamentKey tour_k = mapGetFirst(cs->tournaments_map);
     TournamentData tour_d = mapGet(cs->tournaments_map, tour_k);
     printf("%d\n", tour_d->winner);
 */
+
     // printf("%d\n",);
     return 0;
 }
