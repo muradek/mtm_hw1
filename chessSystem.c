@@ -139,7 +139,6 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time, Tou
     // if i do, maybe a problem with the if-else conditions
 }
 
-
 // function that removes a player from a tournament and updates it's oponent info 
 void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournament_data, int player_id)
 {
@@ -190,6 +189,54 @@ void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournam
     }
     freeGameKey(game_key); // is thie enough? or should i use every iteration?
 }    
+
+// function that set the score of each player in a tournament
+void setPlayersScore(TournamentData tournament_data)
+{
+    //iterate turnament's players map
+    PlayerKey player_key = (PlayerKey)mapGetFirst(tournament_data->players_map);
+    while (player_key != NULL)
+    {
+        PlayerData player_data = (PlayerData)mapGet(tournament_data->players_map, player_key);
+        player_data->score= ( 2*(player_data->num_wins) + 1*(player_data->num_draws) );
+        player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
+    }
+}
+
+// function that finds and returns tournament's winner
+int getTournamentWinner(TournamentData tournament_data)
+{
+    
+    PlayerKey curr_winner_key = (PlayerKey)mapGetFirst(tournament_data->players_map); //cant be NULL
+    PlayerKey next_player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
+    while (next_player_key != NULL)
+    {
+        PlayerData curr_winner_data = (PlayerData)mapGet(tournament_data->players_map, curr_winner_key);
+        PlayerData next_player_data = (PlayerData)mapGet(tournament_data->players_map, next_player_key);
+        if (next_player_data->score > curr_winner_data->score)
+        {
+            curr_winner_key = next_player_key; 
+        }
+        else if ((next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses < curr_winner_data->num_losses))
+        {
+            curr_winner_key = next_player_key;
+        }
+        else if ((next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
+            && (next_player_data->num_wins > curr_winner_data->num_wins))
+        {
+            curr_winner_key = next_player_key;
+        }
+        else if ( (next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
+            && (next_player_data->num_wins = curr_winner_data->num_wins) && (next_player_key->player_id < curr_winner_key->player_id))
+        {
+            curr_winner_key = next_player_key;
+        }
+        next_player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
+    }
+
+    int winner = curr_winner_key->player_id;
+    return winner;
+}
 
 ChessSystem chessCreate()
 {
@@ -422,14 +469,26 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
         freeTournamentKey(tournament_to_end_key);
         return CHESS_TOURNAMENT_ENDED;
     }
+
     if(mapGetSize(tournament_to_end_data->games_map) == 0)
     {
         freeTournamentKey(tournament_to_end_key);
         return CHESS_NO_GAMES;
     }
 
-}
+    tournament_to_end_data->ended = true;
 
+    // set tournament's players score
+    setPlayersScore(tournament_to_end_data);
+
+    // sort the players by level, losses, wins, id 
+    int winner = getTournamentWinner(tournament_to_end_data);
+
+    // set the tournament's winner
+    tournament_to_end_data->winner = winner;
+
+    return CHESS_SUCCESS;
+}
 
 int main()
 {
@@ -437,8 +496,12 @@ int main()
 
     printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
     printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 15));
-    printf("%d\n", chessRemovePlayer(cs, 1));
-    printf("%d\n", chessRemoveTournament(cs, 2));
+    printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 15));
+    printf("%d\n", chessAddGame(cs, 2, 2, 4, DRAW, 15));
+    printf("%d\n", chessEndTournament(cs, 2));
+    TournamentKey tour_k = mapGetFirst(cs->tournaments_map);
+    TournamentData tour_d = mapGet(cs->tournaments_map, tour_k);
+    printf("%d\n", tour_d->winner);
     // printf("%d\n",);
     return 0;
 }

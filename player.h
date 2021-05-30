@@ -9,6 +9,7 @@ typedef struct player_data_t
     int num_wins;
     int num_losses;
     int num_draws;
+    int score;
     int level;
 }*PlayerData;
 

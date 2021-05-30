@@ -23,6 +23,7 @@ PlayerData playerDataCreate()
     new_player->num_wins = 0;
     new_player->num_losses = 0;
     new_player->num_draws = 0;
+    new_player->score = 0;
     new_player->level = 0;
     return new_player;
 }
@@ -55,6 +56,7 @@ PlayerData copyPlayerData(PlayerData old_player)
     new_player->num_draws = old_player->num_draws;
     new_player->num_wins = old_player->num_wins;
     new_player->num_losses = old_player->num_losses;
+    new_player->score = old_player->score;
     return new_player;
 
 }
