@@ -124,8 +124,9 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){
     if(mapContains(map, keyElement)){// if the key is already in the map
         while(current_node){
             if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
-                map->FreeDataElement(current_node->DataElement);
+                MapDataElement data_to_free = current_node->DataElement;
                 current_node->DataElement = map->CopyDataElement(dataElement);; // we should use copyDataelement
+                map->FreeDataElement(data_to_free);
                 return MAP_SUCCESS;
             }
             current_node=current_node->next_node;

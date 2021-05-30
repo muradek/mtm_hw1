@@ -497,11 +497,35 @@ int main()
     printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
     printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 15));
     printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 15));
+    printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 15));
+    printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 15));
+
+
+    PlayerKey key_1 = playerKeyCreate(1);
+    PlayerData data_1 = (PlayerData)mapGet(cs->players_map, key_1);
+    PlayerKey key_2 = playerKeyCreate(2);
+    PlayerData data_2 = (PlayerData)mapGet(cs->players_map, key_2);  
+    PlayerKey key_3 = playerKeyCreate(3);
+    PlayerData data_3 = (PlayerData)mapGet(cs->players_map, key_3);
+    PlayerKey key_4 = playerKeyCreate(4);
+    PlayerData data_4 = (PlayerData)mapGet(cs->players_map, key_4);
+
+    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
+            ,key_1->player_id, data_1->num_wins, data_1->num_draws, data_1->num_losses);
+    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
+            ,key_2->player_id, data_2->num_wins, data_2->num_draws, data_2->num_losses);
+    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
+            ,key_3->player_id, data_3->num_wins, data_3->num_draws, data_3->num_losses);
+    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
+            ,key_4->player_id, data_4->num_wins, data_4->num_draws, data_4->num_losses);
+/* 
+    
     printf("%d\n", chessAddGame(cs, 2, 2, 4, DRAW, 15));
     printf("%d\n", chessEndTournament(cs, 2));
     TournamentKey tour_k = mapGetFirst(cs->tournaments_map);
     TournamentData tour_d = mapGet(cs->tournaments_map, tour_k);
     printf("%d\n", tour_d->winner);
+*/
     // printf("%d\n",);
     return 0;
 }
