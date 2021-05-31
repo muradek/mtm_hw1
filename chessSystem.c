@@ -437,7 +437,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     }
 
     // check "play_time" input
-    if(play_time <= 0)
+    if(play_time < 0)
     {
         freeTournamentData(tournament_data); // not sure if needed
         freeTournamentKey(tournament_key);
@@ -727,48 +727,54 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
     return CHESS_SUCCESS;
 }
 
-/*
+
 int main()
 {
-    printf("%d\n", chessAddTournament(NULL, 2, 5, "London"));
+    int tournament_id = 1, first_player = 222, second_player = 333, play_time = 1000, invalid = -999;
+    Winner winner = DRAW;
+
+    printf("%d\n", chessAddGame(NULL, invalid, first_player, second_player, winner, play_time)); // == CHESS_NULL_ARGUMENT);
+    printf("%d\n", chessAddGame(NULL, tournament_id, invalid, second_player, winner, play_time)); // == CHESS_NULL_ARGUMENT);
+    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, invalid, winner, play_time)); // == CHESS_NULL_ARGUMENT);
+    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, second_player, invalid, play_time)); // == CHESS_NULL_ARGUMENT);
+    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, second_player, winner, invalid)); // == CHESS_NULL_ARGUMENT);
+
     ChessSystem chess = chessCreate();
-    printf("%d\n", chessAddTournament(chess, 1, 5, NULL)); // == CHESS_NULL_ARGUMENT);
-    printf("%d\n", chessAddTournament(chess, 1, 4, "Akko")); // == CHESS_SUCCESS);
-    printf("%d\n", chessAddTournament(chess, 2, 5, "London")); // == CHESS_SUCCESS);
-    printf("%d\n", chessAddTournament(chess, 1, 10, "Paris")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    printf("%d\n", chessAddTournament(chess, 2, 10, "!!!")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    printf("%d\n", chessAddTournament(chess, 3, 10, "!!!")); // == CHESS_INVALID_LOCATION);
-    printf("%d\n", chessAddTournament(chess, 3, -19, " @Jerusalem")); // == CHESS_INVALID_LOCATION);
-    printf("%d\n", chessAddTournament(chess, 3, -19, "Jerusalem")); // == CHESS_INVALID_MAX_GAMES);
-    printf("%d\n", chessAddTournament(chess, 2, 14, "Barcelona")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    printf("%d\n", chessAddTournament(chess, 3, 14, "Barcelona")); // == CHESS_SUCCESS);
-    printf("%d\n", chessAddTournament(chess, 3, 14, "Barcelona")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    printf("%d\n", chessAddTournament(chess, 0, 10, "Madrid")); // == CHESS_INVALID_ID);
+    printf("%d\n",chessAddGame(chess, invalid, first_player, second_player, invalid, invalid)); // == CHESS_INVALID_ID);
+    printf("%d\n",chessAddGame(chess, tournament_id, invalid, second_player, invalid, invalid)); // == CHESS_INVALID_ID);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, invalid, invalid, invalid)); // == CHESS_INVALID_ID);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, first_player, invalid, invalid)); // == CHESS_INVALID_ID);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time)); // == CHESS_TOURNAMENT_NOT_EXIST);
+    printf("%d\n",chessAddTournament(chess, tournament_id, 4, "Akko")); // == CHESS_SUCCESS
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time)); // == CHESS_SUCCESS);
+    printf("%d\n",chessEndTournament(chess, tournament_id)); // == CHESS_SUCCESS);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player +5, second_player+5, winner, play_time)); // == CHESS_TOURNAMENT_ENDED);
 
-     for (int i = -100; i < 1; i++)
-    {
-        ASSERT_TEST(chessAddTournament(chess, i, 999, "Losangeles") == CHESS_INVALID_ID);
-    }
+    ++tournament_id;
+    printf("%d\n",chessAddTournament(chess, tournament_id, 14, "Barcelona")); //  == CHESS_SUCCESS);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, invalid)); //  == CHESS_INVALID_PLAY_TIME);
+    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, 0)); //  == CHESS_SUCCESS);
 
-    for (int i = 4; i < 300; i++)
+/*
+    ++tournament_id;
+    ASSERT_TEST(chessAddTournament(chess, tournament_id, 14, "Somalia") == CHESS_SUCCESS);
+    ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time) == CHESS_SUCCESS);
+    ASSERT_TEST(chessAddGame(chess, tournament_id, second_player, first_player, winner, play_time) == CHESS_GAME_ALREADY_EXISTS);
+    ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time) == CHESS_GAME_ALREADY_EXISTS);
+
+
+    ++tournament_id;
+    int max_games_in_tour = 16;
+    ASSERT_TEST(chessAddTournament(chess, tournament_id, max_games_in_tour, "Isla bonita") == CHESS_SUCCESS);    
+    for (int i = 0; i < max_games_in_tour / 2 ; i++)
     {
-        ASSERT_TEST(chessAddTournament(chess, i, i+13, "Afganistan") == CHESS_SUCCESS);
+        ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player++, winner, play_time) == CHESS_SUCCESS);
+        ASSERT_TEST(chessAddGame(chess, tournament_id, second_player++, first_player, winner, play_time) == CHESS_SUCCESS);
     }
+    ASSERT_TEST(chessAddGame(chess, tournament_id, second_player++, first_player, winner, play_time) == CHESS_EXCEEDED_GAMES);
     
-    ASSERT_TEST(chessAddTournament(chess, 300, 0, "Munich") == CHESS_INVALID_MAX_GAMES);
-    ASSERT_TEST(chessAddTournament(chess, 300, 937, "TelAviv") == CHESS_INVALID_LOCATION);
-    ASSERT_TEST(chessAddTournament(chess, 300, 937, "Tel aviv") == CHESS_SUCCESS);
-    ASSERT_TEST(chessAddTournament(chess, 301, 937, "los") == CHESS_INVALID_LOCATION);
-    ASSERT_TEST(chessAddTournament(chess, 301, 937, "One day it will success") == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_NO_GAMES);
-    ASSERT_TEST(chessAddGame(chess, 301, 133, 135, SECOND_PLAYER, 55 ) == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_TOURNAMENT_ENDED);
-    ASSERT_TEST(chessAddTournament(chess, 301, 3516, "Maybe today") == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    ASSERT_TEST(chessAddTournament(chess, 301, 6165, " Starts with space") == CHESS_TOURNAMENT_ALREADY_EXISTS);
-    ASSERT_TEST(chessAddTournament(chess, 305, 6165, " Starts with space") == CHESS_INVALID_LOCATION);
-
-    chessDestroy(chess); 
+    chessDestroy(chess);
+    */
     return 0;
-}
-*/
+}                         
+
