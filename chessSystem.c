@@ -78,7 +78,7 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time, Tou
     }
 
     // if the players are in the tournament, get the data
-    // else, initialize them
+    // else, initialize them and add them to players_count
     if (mapContains(tournament_data->players_map, first_player_key))
     {
         first_player_tournament_data = (PlayerData)mapGet(tournament_data->players_map, first_player_key);
@@ -86,6 +86,7 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time, Tou
     else
     {
         first_player_tournament_data = playerDataCreate();
+        tournament_data->players_count++;
     }
 
     if (mapContains(tournament_data->players_map, second_player_key))
@@ -94,6 +95,7 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time, Tou
     }
     else{
         second_player_tournament_data = playerDataCreate();
+        tournament_data->players_count++;
     }
 
     // update the data of the players in the tournament&chess
@@ -289,6 +291,38 @@ void sortArray(Map players_map, PlayerKey* keys_array, int players_map_size)
     }
 
 }
+
+// returns tournament's longest game time
+int getTournamentLongestGame(TournamentData tournament_data)
+{
+    GameKey game_key = (GameKey)mapGetFirst(tournament_data->games_map);
+    int longest_time = 0;
+    while (game_key != NULL)
+    {
+        GameData game_data = (GameData)mapGet(tournament_data->games_map, game_key);
+        if (game_data->game_length > longest_time)
+        {
+            longest_time = game_data->game_length;
+        }
+        game_key = (GameKey)mapGetNext(tournament_data->games_map);
+    }
+    return longest_time;
+}
+
+// returns tournament's avarage games time
+double getTournamenrAvaragetime(TournamentData tournament_data)
+{
+    GameKey game_key = (GameKey)mapGetFirst(tournament_data->games_map);
+    double total_time = 0;
+    while (game_key != NULL)   
+    {
+        GameData game_data = (GameData)mapGet(tournament_data->games_map, game_key);
+        total_time = total_time + game_data->game_length;
+        game_key = (GameKey)mapGetNext(tournament_data->games_map);
+    } 
+    return (double)((double)total_time / (double)mapGetSize(tournament_data->games_map));
+}
+
 
 ChessSystem chessCreate()
 {
@@ -605,6 +639,54 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE* file)
     return CHESS_SUCCESS;
 }
 
+ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
+{
+    // check input!!
+    bool no_tournaments_ended = true;
+    TournamentKey tournament_key= (TournamentKey)mapGetFirst(chess->tournaments_map);
+    while(tournament_key!=NULL)
+    {
+        TournamentData tournament_data = (TournamentData)mapGet(chess->tournaments_map, tournament_key);
+        if(tournament_data->ended == true)
+        {
+            no_tournaments_ended = false;
+            break;
+        }
+    }
+
+    if(no_tournaments_ended)
+    {
+        // free key?
+        // free data?
+        return CHESS_NO_TOURNAMENTS_ENDED;
+    }
+
+    // open the file to write mode
+    FILE* file = fopen(path_file, "w"); // should i check that it worked?
+    tournament_key= (TournamentKey)mapGetFirst(chess->tournaments_map);
+    while (tournament_key != NULL)
+    {
+        TournamentData tournament_data = (TournamentData)mapGet(chess->tournaments_map, tournament_key);
+        if(tournament_data->ended)
+        {
+            fprintf(file, "%d\n", tournament_data->winner);
+            fprintf(file, "%d\n", getTournamentLongestGame(tournament_data));
+            fprintf(file, "%.2f\n", getTournamenrAvaragetime(tournament_data));
+            fprintf(file, "%s\n", tournament_data->location);
+            fprintf(file, "%d\n", mapGetSize(tournament_data->games_map));
+            fprintf(file, "%d\n", tournament_data->players_count);
+        }
+        tournament_key = mapGetNext(chess->tournaments_map);
+    }
+
+    // close the file we opend
+    fclose(file);
+
+    return CHESS_SUCCESS;
+}
+
+
+
 int main()
 {
     ChessSystem cs = chessCreate();
@@ -614,6 +696,8 @@ int main()
     printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 20));
     printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 100));
     printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 50));
+    printf("%d\n", chessEndTournament(cs, 2));
+    printf("%d\n", chessSaveTournamentStatistics(cs, "C:/Users/murad/Desktop/mtm_hw1/output.txt"));
 
     PlayerKey key_1 = playerKeyCreate(1);
     PlayerData data_1 = (PlayerData)mapGet(cs->players_map, key_1);
@@ -635,9 +719,6 @@ int main()
             ,key_4->player_id, data_4->num_wins, data_4->num_draws, data_4->num_losses);
 
 
-    FILE* file = fopen("C:/Users/murad/Desktop/mtm_hw1/output.txt", "w");
-    chessSavePlayersLevels(cs, file);
-    fclose(file);
 
 /* 
     printf("%d\n", chessEndTournament(cs, 2));
