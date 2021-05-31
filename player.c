@@ -24,7 +24,7 @@ PlayerData playerDataCreate()
     new_player->num_losses = 0;
     new_player->num_draws = 0;
     new_player->score = 0;
-    new_player->level = 0;
+    new_player->level = 0.00;
     return new_player;
 }
 

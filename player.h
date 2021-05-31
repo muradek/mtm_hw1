@@ -10,7 +10,7 @@ typedef struct player_data_t
     int num_losses;
     int num_draws;
     int score;
-    int level;
+    double level;
 }*PlayerData;
 
 // the key of player for the players map

@@ -238,6 +238,58 @@ int getTournamentWinner(TournamentData tournament_data)
     return winner;
 }
 
+// function that sets the level of each player in the system
+void setPlayersLevel(ChessSystem chess)
+{
+    PlayerKey curr_player_key = (PlayerKey)mapGetFirst(chess->players_map);
+    while(curr_player_key != NULL)
+    {
+        PlayerData curr_data = (PlayerData)mapGet(chess->players_map, curr_player_key);
+        if (curr_data->games_count == 0)
+        {
+            curr_data->level = (double)0;
+        }
+        else
+        {
+            curr_data->level = (double)(curr_data->num_wins*6 + curr_data->num_draws*2 - curr_data->num_losses*10)/(double)(curr_data->games_count);
+        }
+        curr_player_key = mapGetNext(chess->players_map);
+    }
+}
+
+// function that insert players key to array
+void insertPlayersToArray(ChessSystem chess, PlayerKey* keys_array)
+{
+    PlayerKey curr_player_key = (PlayerKey)mapGetFirst(chess->players_map);
+    int i = 0; // index for current array cell
+    while (curr_player_key != NULL)
+    {
+        keys_array[i] = curr_player_key;
+        curr_player_key = (PlayerKey)mapGetNext(chess->players_map);
+        i++;
+    }
+}
+
+// function that sort keys array by level and then ID
+void sortArray(Map players_map, PlayerKey* keys_array, int players_map_size)
+{
+    for (int i=0; i < players_map_size; i++)
+    {
+        for (int j=i+1; j<players_map_size; j++)
+        {
+            PlayerData curr_player_data = (PlayerData)mapGet(players_map, keys_array[i]);
+            PlayerData next_player_data = (PlayerData)mapGet(players_map, keys_array[j]);
+            if(curr_player_data->level < next_player_data->level)
+            {
+                PlayerKey tmp_key = keys_array[i];
+                keys_array[i] = keys_array[j];
+                keys_array[j] = tmp_key;
+            }
+        }
+    }
+
+}
+
 ChessSystem chessCreate()
 {
     ChessSystem chess_system=malloc(sizeof(*chess_system));
@@ -522,13 +574,35 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
     return average_play_time;
 }
 
-ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file)
+ChessResult chessSavePlayersLevels(ChessSystem chess, FILE* file)
 {
     // set each player's level
+    setPlayersLevel(chess);
 
-    // sort all players by level and id
+    // create arrays for player's key&data
+    int players_map_size = mapGetSize(chess->players_map);
+    PlayerKey* keys_array = malloc(players_map_size * sizeof(*keys_array)); // allocating the array
+    if (keys_array==NULL)
+    {
+        return CHESS_SAVE_FAILURE;
+    }
+
+    // insert system's player's keys to array
+    insertPlayersToArray(chess, keys_array);
+
+    // sort the array by level&id
+    sortArray(chess->players_map, keys_array, players_map_size);
 
     // print sorted array to the file
+    for (int i=0; i<players_map_size; i++)
+    {
+        PlayerKey player_key = keys_array[i];
+        int player_id = player_key->player_id;
+        PlayerData player_data = (PlayerData)mapGet(chess->players_map, player_key);
+        double player_level = player_data->level;
+        fprintf(file, "%d %.2f\n", player_id, player_level);
+    }
+    return CHESS_SUCCESS;
 }
 
 int main()
@@ -541,13 +615,6 @@ int main()
     printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 100));
     printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 50));
 
-    ChessResult* cs_result = malloc(sizeof(*cs_result));
-    printf("player: %d, avg: time: %f\n", 1, chessCalculateAveragePlayTime(cs, 1, cs_result));
-    printf("player: %d, avg: time: %f\n", 2, chessCalculateAveragePlayTime(cs, 2, cs_result));
-    printf("player: %d, avg: time: %f\n", 3, chessCalculateAveragePlayTime(cs, 3, cs_result));
-    printf("player: %d, avg: time: %f\n", 4, chessCalculateAveragePlayTime(cs, 4, cs_result));
-
-/* 
     PlayerKey key_1 = playerKeyCreate(1);
     PlayerData data_1 = (PlayerData)mapGet(cs->players_map, key_1);
     PlayerKey key_2 = playerKeyCreate(2);
@@ -567,7 +634,12 @@ int main()
     printf("player: %d, wins: %d, draws: %d, losses: %d\n"
             ,key_4->player_id, data_4->num_wins, data_4->num_draws, data_4->num_losses);
 
- 
+
+    FILE* file = fopen("C:/Users/murad/Desktop/mtm_hw1/output.txt", "w");
+    chessSavePlayersLevels(cs, file);
+    fclose(file);
+
+/* 
     printf("%d\n", chessEndTournament(cs, 2));
     TournamentKey tour_k = mapGetFirst(cs->tournaments_map);
     TournamentData tour_d = mapGet(cs->tournaments_map, tour_k);
