@@ -6,3 +6,6 @@ maptestss.c
 build/
 .vscode/
 result.txt
+expected_output/
+mtm_map/
+tests/

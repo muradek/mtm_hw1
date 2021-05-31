@@ -25,7 +25,7 @@ static bool checkLocation(const char* location)
         return false;
     }
 
-    for (int i=1; i<strlen(location); i++)
+    for (unsigned int i=1; i<strlen(location); i++)
     {
         if (islower(location[i])==0 && isspace(location[i])==0)
         {
@@ -44,7 +44,7 @@ struct chess_system_t
 };
 
 // function that inserts players into players_map of chess&tournament
-void insertPlayersToMaps(int first_player, int second_player, int play_time, TournamentKey tournament_key,
+void insertPlayersToMaps(int first_player, int second_player, int play_time,
      TournamentData tournament_data, Winner winner, ChessSystem chess)
 {
     // create players new key elements to find them in the maps
@@ -142,7 +142,7 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time, Tou
 }
 
 // function that removes a player from a tournament and updates it's oponent info 
-void tournamentRemovePlayer(TournamentKey tournament_key, TournamentData tournament_data, int player_id)
+void tournamentRemovePlayer(TournamentData tournament_data, int player_id)
 {
     // iterate tournament's games_map
     GameKey game_key = (GameKey)mapGetFirst(tournament_data->games_map);
@@ -359,6 +359,11 @@ void chessDestroy(ChessSystem chess)
 
 ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player, const char* tournament_location)
 {
+    if(chess == NULL || tournament_location == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if (tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -394,6 +399,11 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player, Winner winner, int play_time)
 {
     // check input correction
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if (tournament_id <= 0 || first_player <= 0 || second_player <= 0 || first_player == second_player)
     {
         return CHESS_INVALID_ID;
@@ -447,7 +457,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     mapPut(tournament_data->games_map, game_key_tour, game_data_tour);
 
     // insert the player's updated data to the maps
-    insertPlayersToMaps(first_player, second_player, play_time, tournament_key, tournament_data, winner, chess);
+    insertPlayersToMaps(first_player, second_player, play_time, tournament_data, winner, chess);
 
     // free allocated structures?
 
@@ -456,6 +466,12 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
 
 ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 {
+    // check input correction
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if (tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -502,7 +518,12 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
 
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 {
-    // checking input
+    // check input correction
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if (player_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -523,7 +544,7 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         TournamentData tournament_data = (TournamentData)mapGet(chess->tournaments_map, tournament_key);
         if (!(tournament_data->ended))
         {
-            tournamentRemovePlayer(tournament_key, tournament_data, player_id);
+            tournamentRemovePlayer(tournament_data, player_id);
             mapRemove(tournament_data->players_map, player_key);
         }
         tournament_key = (TournamentKey)mapGetNext(chess->tournaments_map);
@@ -536,7 +557,12 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
 
 ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 {
-    // check input
+    // check input correction
+    if(chess == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if(tournament_id <= 0)
     {
         return CHESS_INVALID_ID;
@@ -578,7 +604,12 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
-    // check input
+    // check input correction
+    if(chess == NULL || chess_result == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     if (player_id <= 0)
     {
         *chess_result = CHESS_INVALID_ID;
@@ -610,12 +641,18 @@ double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessRes
 
 ChessResult chessSavePlayersLevels(ChessSystem chess, FILE* file)
 {
+    // check input correction
+    if(chess == NULL || file == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     // set each player's level
     setPlayersLevel(chess);
 
     // create arrays for player's key&data
     int players_map_size = mapGetSize(chess->players_map);
-    PlayerKey* keys_array = malloc(players_map_size * sizeof(*keys_array)); // allocating the array
+    PlayerKey* keys_array = malloc((unsigned long)players_map_size * sizeof(*keys_array)); // allocating the array
     if (keys_array==NULL)
     {
         return CHESS_SAVE_FAILURE;
@@ -641,7 +678,12 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE* file)
 
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 {
-    // check input!!
+    // check input correction
+    if(chess == NULL || path_file == NULL)
+    {
+        return CHESS_NULL_ARGUMENT;
+    }
+
     bool no_tournaments_ended = true;
     TournamentKey tournament_key= (TournamentKey)mapGetFirst(chess->tournaments_map);
     while(tournament_key!=NULL)
@@ -685,48 +727,48 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
     return CHESS_SUCCESS;
 }
 
-
-
+/*
 int main()
 {
-    ChessSystem cs = chessCreate();
+    printf("%d\n", chessAddTournament(NULL, 2, 5, "London"));
+    ChessSystem chess = chessCreate();
+    printf("%d\n", chessAddTournament(chess, 1, 5, NULL)); // == CHESS_NULL_ARGUMENT);
+    printf("%d\n", chessAddTournament(chess, 1, 4, "Akko")); // == CHESS_SUCCESS);
+    printf("%d\n", chessAddTournament(chess, 2, 5, "London")); // == CHESS_SUCCESS);
+    printf("%d\n", chessAddTournament(chess, 1, 10, "Paris")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    printf("%d\n", chessAddTournament(chess, 2, 10, "!!!")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    printf("%d\n", chessAddTournament(chess, 3, 10, "!!!")); // == CHESS_INVALID_LOCATION);
+    printf("%d\n", chessAddTournament(chess, 3, -19, " @Jerusalem")); // == CHESS_INVALID_LOCATION);
+    printf("%d\n", chessAddTournament(chess, 3, -19, "Jerusalem")); // == CHESS_INVALID_MAX_GAMES);
+    printf("%d\n", chessAddTournament(chess, 2, 14, "Barcelona")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    printf("%d\n", chessAddTournament(chess, 3, 14, "Barcelona")); // == CHESS_SUCCESS);
+    printf("%d\n", chessAddTournament(chess, 3, 14, "Barcelona")); // == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    printf("%d\n", chessAddTournament(chess, 0, 10, "Madrid")); // == CHESS_INVALID_ID);
 
-    printf("%d\n", chessAddTournament(cs, 2, 2, "Eilat"));
-    printf("%d\n", chessAddGame(cs, 2, 1, 2, DRAW, 10));
-    printf("%d\n", chessAddGame(cs, 2, 3, 4, FIRST_PLAYER, 20));
-    printf("%d\n", chessAddGame(cs, 2, 2, 4, FIRST_PLAYER, 100));
-    printf("%d\n", chessAddGame(cs, 2, 1, 4, SECOND_PLAYER, 50));
-    printf("%d\n", chessEndTournament(cs, 2));
-    printf("%d\n", chessSaveTournamentStatistics(cs, "C:/Users/murad/Desktop/mtm_hw1/output.txt"));
+     for (int i = -100; i < 1; i++)
+    {
+        ASSERT_TEST(chessAddTournament(chess, i, 999, "Losangeles") == CHESS_INVALID_ID);
+    }
 
-    PlayerKey key_1 = playerKeyCreate(1);
-    PlayerData data_1 = (PlayerData)mapGet(cs->players_map, key_1);
-    PlayerKey key_2 = playerKeyCreate(2);
-    PlayerData data_2 = (PlayerData)mapGet(cs->players_map, key_2);  
-    PlayerKey key_3 = playerKeyCreate(3);
-    PlayerData data_3 = (PlayerData)mapGet(cs->players_map, key_3);
-    PlayerKey key_4 = playerKeyCreate(4);
-    PlayerData data_4 = (PlayerData)mapGet(cs->players_map, key_4);
+    for (int i = 4; i < 300; i++)
+    {
+        ASSERT_TEST(chessAddTournament(chess, i, i+13, "Afganistan") == CHESS_SUCCESS);
+    }
+    
+    ASSERT_TEST(chessAddTournament(chess, 300, 0, "Munich") == CHESS_INVALID_MAX_GAMES);
+    ASSERT_TEST(chessAddTournament(chess, 300, 937, "TelAviv") == CHESS_INVALID_LOCATION);
+    ASSERT_TEST(chessAddTournament(chess, 300, 937, "Tel aviv") == CHESS_SUCCESS);
+    ASSERT_TEST(chessAddTournament(chess, 301, 937, "los") == CHESS_INVALID_LOCATION);
+    ASSERT_TEST(chessAddTournament(chess, 301, 937, "One day it will success") == CHESS_SUCCESS);
+    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_NO_GAMES);
+    ASSERT_TEST(chessAddGame(chess, 301, 133, 135, SECOND_PLAYER, 55 ) == CHESS_SUCCESS);
+    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_SUCCESS);
+    ASSERT_TEST(chessEndTournament(chess, 301) == CHESS_TOURNAMENT_ENDED);
+    ASSERT_TEST(chessAddTournament(chess, 301, 3516, "Maybe today") == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    ASSERT_TEST(chessAddTournament(chess, 301, 6165, " Starts with space") == CHESS_TOURNAMENT_ALREADY_EXISTS);
+    ASSERT_TEST(chessAddTournament(chess, 305, 6165, " Starts with space") == CHESS_INVALID_LOCATION);
 
-
-    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
-            ,key_1->player_id, data_1->num_wins, data_1->num_draws, data_1->num_losses);
-    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
-            ,key_2->player_id, data_2->num_wins, data_2->num_draws, data_2->num_losses);
-    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
-            ,key_3->player_id, data_3->num_wins, data_3->num_draws, data_3->num_losses);
-    printf("player: %d, wins: %d, draws: %d, losses: %d\n"
-            ,key_4->player_id, data_4->num_wins, data_4->num_draws, data_4->num_losses);
-
-
-
-/* 
-    printf("%d\n", chessEndTournament(cs, 2));
-    TournamentKey tour_k = mapGetFirst(cs->tournaments_map);
-    TournamentData tour_d = mapGet(cs->tournaments_map, tour_k);
-    printf("%d\n", tour_d->winner);
-*/
-
-    // printf("%d\n",);
+    chessDestroy(chess); 
     return 0;
 }
+*/
