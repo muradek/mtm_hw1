@@ -229,8 +229,9 @@ MapResult mapRemove(Map map, MapKeyElement keyElement){
             Node to_remove = current_node->next_node;
             current_node->next_node = current_node->next_node->next_node;
             to_remove->next_node =NULL;
-            map->FreeKeyElement(current_node->next_node->KeyElement);
-            map->FreeDataElement(current_node->next_node->DataElement);
+            map->FreeKeyElement(to_remove->KeyElement);
+            map->FreeDataElement(to_remove->DataElement);
+            free(to_remove);
             return MAP_SUCCESS;
         }
         current_node=current_node->next_node;
