@@ -152,7 +152,7 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
 }
 
 // function that removes a player from a tournament and updates it's oponent info 
-void tournamentRemovePlayer(TournamentData tournament_data, int player_id)
+void tournamentRemovePlayer(ChessSystem chess ,TournamentData tournament_data, int player_id)
 {
     // iterate tournament's games_map
     GameKey game_key = (GameKey)mapGetFirst(tournament_data->games_map);
@@ -164,42 +164,51 @@ void tournamentRemovePlayer(TournamentData tournament_data, int player_id)
             game_key->player_deleted = true;
             PlayerKey sec_player_key = playerKeyCreate(game_key->second_player_id);
             PlayerData sec_player_data = (PlayerData)mapGet(tournament_data->players_map, sec_player_key);
+            PlayerData sec_player_chess_data = (PlayerData)mapGet(chess->players_map, sec_player_key);
             if (game_data->winner == FIRST_PLAYER)
             {
                 sec_player_data->num_losses -= 1;
                 sec_player_data->num_wins +=1;
+                sec_player_chess_data->num_losses -=1;
+                sec_player_chess_data->num_wins +=1;
             }
             if (game_data->winner == DRAW)
             {
                 sec_player_data->num_draws -= 1;
                 sec_player_data->num_wins += 1;
+                sec_player_chess_data->num_draws -= 1;
+                sec_player_chess_data->num_wins += 1;
             }
             //freePlayerKey(sec_player_key);
-            //freePlayerData(sec_player_data);
-            
+            //freePlayerData(sec_player_data); 
         }
         if (game_key->second_player_id == player_id)
         {
             game_key->player_deleted = true;
             PlayerKey first_player_key = playerKeyCreate(game_key->first_player_id);
-            PlayerData first_player_data = (PlayerData)mapGet(tournament_data->games_map, first_player_key);
-
+            PlayerData first_player_data = (PlayerData)mapGet(tournament_data->players_map, first_player_key);
+            PlayerData first_player_chess_data = (PlayerData)mapGet(chess->players_map, first_player_key);
             if (game_data->winner == SECOND_PLAYER)
             {
                 first_player_data->num_losses -= 1;
                 first_player_data->num_wins +=1;
+                first_player_chess_data->num_losses -= 1;
+                first_player_chess_data->num_wins +=1;
+
             }
             if (game_data->winner == DRAW)
             {
                 first_player_data->num_draws -= 1;
                 first_player_data->num_wins += 1;
+                first_player_chess_data->num_draws -= 1;
+                first_player_chess_data->num_wins += 1;
             }
             //freePlayerKey(first_player_key);
             //freePlayerData(first_player_data);            
         }
         game_key = (GameKey)mapGetNext(tournament_data->games_map);
     }
-    freeGameKey(game_key); // is thie enough? or should i use every iteration?
+    //freeGameKey(game_key); // is thie enough? or should i use every iteration?
 }    
 
 // function that set the score of each player in a tournament
@@ -560,14 +569,16 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id)
         TournamentData tournament_data = (TournamentData)mapGet(chess->tournaments_map, tournament_key);
         if (!(tournament_data->ended))
         {
-            tournamentRemovePlayer(tournament_data, player_id);
+            tournamentRemovePlayer(chess, tournament_data, player_id);
             mapRemove(tournament_data->players_map, player_key);
         }
         tournament_key = (TournamentKey)mapGetNext(chess->tournaments_map);
     }
     mapRemove(chess->players_map, player_key);
     freeTournamentKey(tournament_key); // is this neccessery?
+    tournament_key= NULL;
     freePlayerKey(player_key);
+    player_key = NULL;
     return CHESS_SUCCESS;
 }
 
@@ -621,9 +632,15 @@ ChessResult chessEndTournament (ChessSystem chess, int tournament_id)
 double chessCalculateAveragePlayTime (ChessSystem chess, int player_id, ChessResult* chess_result)
 {
     // check input correction
-    if(chess == NULL || chess_result == NULL)
+    if(chess_result == NULL)
     {
-        return CHESS_NULL_ARGUMENT;
+        return 0;
+    }
+
+    if(chess == NULL)
+    {
+        *chess_result = CHESS_NULL_ARGUMENT;
+        return 0;
     }
 
     if (player_id <= 0)
