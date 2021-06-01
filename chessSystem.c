@@ -44,7 +44,8 @@ struct chess_system_t
 };
 
 // function that inserts players into players_map of chess&tournament
-void insertPlayersToMaps(int first_player, int second_player, int play_time,
+// returns CHESS_EXCEEDED_GAMES or CHESS_SUCCESS
+ChessResult insertPlayersToMaps(int first_player, int second_player, int play_time, TournamentKey tournament_key,
      TournamentData tournament_data, Winner winner, ChessSystem chess)
 {
     // create players new key elements to find them in the maps
@@ -98,6 +99,13 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time,
         tournament_data->players_count++;
     }
 
+    // check if player's played more than allowed
+    if(first_player_tournament_data->games_count == tournament_data->max_games_per_player ||
+       second_player_tournament_data->games_count == tournament_data->max_games_per_player)
+       {
+           return CHESS_EXCEEDED_GAMES;
+       }
+
     // update the data of the players in the tournament&chess
     first_player_chess_data->games_count+=1;
     first_player_chess_data->games_length+= play_time;
@@ -135,10 +143,12 @@ void insertPlayersToMaps(int first_player, int second_player, int play_time,
     mapPut(chess->players_map, first_player_key, first_player_chess_data);
     mapPut(chess->players_map, second_player_key, second_player_chess_data);
     mapPut(tournament_data->players_map, first_player_key, first_player_tournament_data);
-    mapPut(tournament_data->players_map, second_player_key, second_player_tournament_data);  
+    mapPut(tournament_data->players_map, second_player_key, second_player_tournament_data); 
+    mapPut(chess->tournaments_map, tournament_key, tournament_data); 
 
     // should i free created structures?
     // if i do, maybe a problem with the if-else conditions
+    return CHESS_SUCCESS;
 }
 
 // function that removes a player from a tournament and updates it's oponent info 
@@ -418,10 +428,9 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     }
 
     // check if the tournament has already ended 
-    TournamentData tournament_data = (TournamentData) mapGet(chess->tournaments_map, tournament_key);
+    TournamentData tournament_data = copyTournamentData(mapGet(chess->tournaments_map, tournament_key));
     if (tournament_data->ended)
     {
-        freeTournamentData(tournament_data); // not sure if needed
         freeTournamentKey(tournament_key);
         return CHESS_TOURNAMENT_ENDED;
     }
@@ -433,7 +442,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         freeTournamentData(tournament_data); // not sure if needed
         freeTournamentKey(tournament_key);
         freeGameKey(game_key);
-        return CHESS_GAME_ALREADY_EXISTS;        
+        return CHESS_GAME_ALREADY_EXISTS;
     }
 
     // check "play_time" input
@@ -443,6 +452,15 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         freeTournamentKey(tournament_key);
         freeGameKey(game_key);
         return CHESS_INVALID_PLAY_TIME;         
+    }
+
+    // insert the player's updated data to the maps
+    if(insertPlayersToMaps(first_player, second_player, play_time, tournament_key, tournament_data, winner, chess)== CHESS_EXCEEDED_GAMES)
+    {
+        freeTournamentData(tournament_data); // not sure if needed
+        freeTournamentKey(tournament_key);
+        freeGameKey(game_key);
+        return CHESS_EXCEEDED_GAMES;
     }
 
     // create the data for the game we want to insert
@@ -455,9 +473,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     // insert the game to the tournament's games_map and the system's games_map
     mapPut(chess->games_map, game_key, game_data);
     mapPut(tournament_data->games_map, game_key_tour, game_data_tour);
-
-    // insert the player's updated data to the maps
-    insertPlayersToMaps(first_player, second_player, play_time, tournament_data, winner, chess);
+    mapPut(chess->tournaments_map, tournament_key, tournament_data); //updating the map with the new data
 
     // free allocated structures?
 
@@ -726,55 +742,4 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
 
     return CHESS_SUCCESS;
 }
-
-
-int main()
-{
-    int tournament_id = 1, first_player = 222, second_player = 333, play_time = 1000, invalid = -999;
-    Winner winner = DRAW;
-
-    printf("%d\n", chessAddGame(NULL, invalid, first_player, second_player, winner, play_time)); // == CHESS_NULL_ARGUMENT);
-    printf("%d\n", chessAddGame(NULL, tournament_id, invalid, second_player, winner, play_time)); // == CHESS_NULL_ARGUMENT);
-    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, invalid, winner, play_time)); // == CHESS_NULL_ARGUMENT);
-    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, second_player, invalid, play_time)); // == CHESS_NULL_ARGUMENT);
-    printf("%d\n", chessAddGame(NULL, tournament_id, first_player, second_player, winner, invalid)); // == CHESS_NULL_ARGUMENT);
-
-    ChessSystem chess = chessCreate();
-    printf("%d\n",chessAddGame(chess, invalid, first_player, second_player, invalid, invalid)); // == CHESS_INVALID_ID);
-    printf("%d\n",chessAddGame(chess, tournament_id, invalid, second_player, invalid, invalid)); // == CHESS_INVALID_ID);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, invalid, invalid, invalid)); // == CHESS_INVALID_ID);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, first_player, invalid, invalid)); // == CHESS_INVALID_ID);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time)); // == CHESS_TOURNAMENT_NOT_EXIST);
-    printf("%d\n",chessAddTournament(chess, tournament_id, 4, "Akko")); // == CHESS_SUCCESS
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time)); // == CHESS_SUCCESS);
-    printf("%d\n",chessEndTournament(chess, tournament_id)); // == CHESS_SUCCESS);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player +5, second_player+5, winner, play_time)); // == CHESS_TOURNAMENT_ENDED);
-
-    ++tournament_id;
-    printf("%d\n",chessAddTournament(chess, tournament_id, 14, "Barcelona")); //  == CHESS_SUCCESS);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, invalid)); //  == CHESS_INVALID_PLAY_TIME);
-    printf("%d\n",chessAddGame(chess, tournament_id, first_player, second_player, winner, 0)); //  == CHESS_SUCCESS);
-
-/*
-    ++tournament_id;
-    ASSERT_TEST(chessAddTournament(chess, tournament_id, 14, "Somalia") == CHESS_SUCCESS);
-    ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time) == CHESS_SUCCESS);
-    ASSERT_TEST(chessAddGame(chess, tournament_id, second_player, first_player, winner, play_time) == CHESS_GAME_ALREADY_EXISTS);
-    ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player, winner, play_time) == CHESS_GAME_ALREADY_EXISTS);
-
-
-    ++tournament_id;
-    int max_games_in_tour = 16;
-    ASSERT_TEST(chessAddTournament(chess, tournament_id, max_games_in_tour, "Isla bonita") == CHESS_SUCCESS);    
-    for (int i = 0; i < max_games_in_tour / 2 ; i++)
-    {
-        ASSERT_TEST(chessAddGame(chess, tournament_id, first_player, second_player++, winner, play_time) == CHESS_SUCCESS);
-        ASSERT_TEST(chessAddGame(chess, tournament_id, second_player++, first_player, winner, play_time) == CHESS_SUCCESS);
-    }
-    ASSERT_TEST(chessAddGame(chess, tournament_id, second_player++, first_player, winner, play_time) == CHESS_EXCEEDED_GAMES);
-    
-    chessDestroy(chess);
-    */
-    return 0;
-}                         
 
