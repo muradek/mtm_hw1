@@ -211,44 +211,53 @@ MapResult mapClear(Map map){
     map->first_node=current_node;
     return MAP_SUCCESS;
 }
-MapResult mapRemove(Map map, MapKeyElement keyElement){
-    if(map == NULL || keyElement == NULL){
+MapResult mapRemove(Map map, MapKeyElement keyElement) {
+    if (map == NULL || keyElement == NULL) {
         return MAP_NULL_ARGUMENT;
     }
+    if (map->first_node == NULL||!mapContains(map,keyElement)) {
+        return MAP_ITEM_DOES_NOT_EXIST;
+    }
     Node current_node = map->first_node; // if the key we want to remove is the first in the linked list
-    if(map->CompareKeyElements(keyElement,map->first_node->KeyElement)==0){
+    if (map->CompareKeyElements(keyElement, map->first_node->KeyElement) == 0) {
         map->FreeKeyElement(current_node->KeyElement);
         map->FreeDataElement(current_node->DataElement);
-        map->first_node=current_node->next_node;
+        map->first_node = current_node->next_node;
         free(current_node);
         return MAP_SUCCESS;
     }
     // if the key is in the middle
-    while(current_node->next_node){
-        if(map->CompareKeyElements(keyElement,current_node->next_node->KeyElement)==0 && current_node->next_node->next_node){
+    while (current_node->next_node) {
+        if (map->CompareKeyElements(keyElement, current_node->next_node->KeyElement) == 0 &&
+            current_node->next_node->next_node) {
             Node to_remove = current_node->next_node;
             current_node->next_node = current_node->next_node->next_node;
-            to_remove->next_node =NULL;
+            to_remove->next_node = NULL;
             map->FreeKeyElement(to_remove->KeyElement);
             map->FreeDataElement(to_remove->DataElement);
             free(to_remove);
             return MAP_SUCCESS;
         }
-        current_node=current_node->next_node;
+        current_node = current_node->next_node;
     }
     //if the key is the last one in the linked list
-   Node current_node_prev = map->first_node;
-    while(current_node_prev->next_node->next_node){
-        current_node_prev=current_node_prev->next_node;
-    }
-    
-        if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
-            map->FreeKeyElement(current_node->KeyElement);
-            map->FreeDataElement(current_node->DataElement);
-            free(current_node);
-            current_node_prev->next_node=NULL;
-            return MAP_SUCCESS;
+    Node current_node_prev = map->first_node;
+    if (mapGetSize(map)==2) {
+        current_node_prev = map->first_node;
+    } else {
+        while (current_node_prev->next_node->next_node) {
+            current_node_prev = current_node_prev->next_node;
         }
+    }
+
+
+    if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
+        map->FreeKeyElement(current_node->KeyElement);
+        map->FreeDataElement(current_node->DataElement);
+        free(current_node);
+        current_node_prev->next_node=NULL;
+        return MAP_SUCCESS;
+    }
     map->iterator=NULL;
 
     return MAP_ITEM_DOES_NOT_EXIST;
