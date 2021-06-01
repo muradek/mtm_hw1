@@ -727,6 +727,7 @@ ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file)
             no_tournaments_ended = false;
             break;
         }
+        tournament_key = (TournamentKey)mapGetNext(chess->tournaments_map);
     }
 
     if(no_tournaments_ended)
