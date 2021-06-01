@@ -236,11 +236,16 @@ MapResult mapRemove(Map map, MapKeyElement keyElement){
         current_node=current_node->next_node;
     }
     //if the key is the last one in the linked list
-
+   Node current_node_prev = map->first_node;
+    while(current_node_prev->next_node->next_node){
+        current_node_prev=current_node_prev->next_node;
+    }
+    
         if(map->CompareKeyElements(keyElement,current_node->KeyElement)==0){
             map->FreeKeyElement(current_node->KeyElement);
             map->FreeDataElement(current_node->DataElement);
             free(current_node);
+            current_node_prev->next_node=NULL;
             return MAP_SUCCESS;
         }
     map->iterator=NULL;
