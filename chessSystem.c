@@ -161,7 +161,7 @@ void tournamentRemovePlayer(ChessSystem chess ,TournamentData tournament_data, i
         GameData game_data = (GameData)mapGet(tournament_data->games_map, game_key);
         if (game_key->first_player_id == player_id)
         {
-            game_key->player_deleted = true;
+            game_key->player_deleted = true; // why isnt it updating?
             PlayerKey sec_player_key = playerKeyCreate(game_key->second_player_id);
             PlayerData sec_player_data = (PlayerData)mapGet(tournament_data->players_map, sec_player_key);
             PlayerData sec_player_chess_data = (PlayerData)mapGet(chess->players_map, sec_player_key);
@@ -184,7 +184,7 @@ void tournamentRemovePlayer(ChessSystem chess ,TournamentData tournament_data, i
         }
         if (game_key->second_player_id == player_id)
         {
-            game_key->player_deleted = true;
+            game_key->player_deleted = true; // why isnt it updating?
             PlayerKey first_player_key = playerKeyCreate(game_key->first_player_id);
             PlayerData first_player_data = (PlayerData)mapGet(tournament_data->players_map, first_player_key);
             PlayerData first_player_chess_data = (PlayerData)mapGet(chess->players_map, first_player_key);
@@ -238,17 +238,17 @@ int getTournamentWinner(TournamentData tournament_data)
         {
             curr_winner_key = next_player_key; 
         }
-        else if ((next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses < curr_winner_data->num_losses))
+        else if ((next_player_data->score == curr_winner_data->score) && (next_player_data->num_losses < curr_winner_data->num_losses))
         {
             curr_winner_key = next_player_key;
         }
-        else if ((next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
+        else if ((next_player_data->score == curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
             && (next_player_data->num_wins > curr_winner_data->num_wins))
         {
             curr_winner_key = next_player_key;
         }
-        else if ( (next_player_data->score = curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
-            && (next_player_data->num_wins = curr_winner_data->num_wins) && (next_player_key->player_id < curr_winner_key->player_id))
+        else if ( (next_player_data->score == curr_winner_data->score) && (next_player_data->num_losses == curr_winner_data->num_losses)
+            && (next_player_data->num_wins == curr_winner_data->num_wins) && (next_player_key->player_id < curr_winner_key->player_id))
         {
             curr_winner_key = next_player_key;
         }
@@ -526,6 +526,23 @@ ChessResult chessRemoveTournament (ChessSystem chess, int tournament_id)
         player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
         // should i free player key? player data?
     }
+    
+    // if the player only played in this tournament, remove him
+    player_key = (PlayerKey)mapGetFirst(tournament_data->players_map);
+    int players_count = mapGetSize(tournament_data->players_map);
+    int curr_player = 0;
+    while(curr_player < players_count)
+    {
+        PlayerData player_data = (PlayerData)mapGet(chess->players_map, player_key);
+        if(player_data->games_count == 0)
+        {
+            mapRemove(chess->players_map, player_key);
+        }
+
+        player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
+        curr_player+=1;
+    }
+
     
     // deleting games from systems games_map
     // iterate on the tournament's games_map
