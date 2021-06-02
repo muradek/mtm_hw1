@@ -58,6 +58,11 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     PlayerData second_player_tournament_data;
     PlayerData second_player_chess_data;
 
+    bool created_first_player_tournament_data = false;
+    bool created_first_player_chess_data = false;
+    bool created_second_player_tournament_data = false;
+    bool created_second_player_chess_data = false;
+
     // if the players are in the system, get the data.
     // else, initialize them
     if (mapContains(chess->players_map, first_player_key))
@@ -67,6 +72,7 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     else
     {
         first_player_chess_data = playerDataCreate();
+        created_first_player_chess_data = true;
     }
 
     if (mapContains(chess->players_map, second_player_key))
@@ -76,6 +82,7 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     else
     {
         second_player_chess_data = playerDataCreate();
+        created_second_player_chess_data = true;
     }
 
     // if the players are in the tournament, get the data
@@ -87,6 +94,7 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     else
     {
         first_player_tournament_data = playerDataCreate();
+        created_first_player_tournament_data = true;
         tournament_data->players_count++;
     }
 
@@ -96,6 +104,7 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     }
     else{
         second_player_tournament_data = playerDataCreate();
+        created_second_player_tournament_data = true;
         tournament_data->players_count++;
     }
 
@@ -146,8 +155,27 @@ ChessResult insertPlayersToMaps(int first_player, int second_player, int play_ti
     mapPut(tournament_data->players_map, second_player_key, second_player_tournament_data); 
     mapPut(chess->tournaments_map, tournament_key, tournament_data); 
 
-    // should i free created structures?
-    // if i do, maybe a problem with the if-else conditions
+    freePlayerKey(first_player_key);
+    freePlayerKey(second_player_key);
+
+
+    if (created_first_player_tournament_data)
+    {
+        freePlayerData(first_player_tournament_data);
+    }
+    if (created_first_player_chess_data)
+    {
+        freePlayerData(first_player_chess_data);
+    }
+    if (created_second_player_tournament_data)
+    {
+        freePlayerData(second_player_tournament_data);
+    }
+    if (created_second_player_chess_data)
+    {
+        freePlayerData(second_player_chess_data);
+    }
+    
     return CHESS_SUCCESS;
 }
 
@@ -179,8 +207,7 @@ void tournamentRemovePlayer(ChessSystem chess ,TournamentData tournament_data, i
                 sec_player_chess_data->num_draws -= 1;
                 sec_player_chess_data->num_wins += 1;
             }
-            //freePlayerKey(sec_player_key);
-            //freePlayerData(sec_player_data); 
+            freePlayerKey(sec_player_key);
         }
         if (game_key->second_player_id == player_id)
         {
@@ -203,13 +230,13 @@ void tournamentRemovePlayer(ChessSystem chess ,TournamentData tournament_data, i
                 first_player_chess_data->num_draws -= 1;
                 first_player_chess_data->num_wins += 1;
             }
-            //freePlayerKey(first_player_key);
-            //freePlayerData(first_player_data);            
+            freePlayerKey(first_player_key);           
         }
+        GameKey tmp_to_remove = game_key;
         game_key = (GameKey)mapGetNext(tournament_data->games_map);
+        freeGameKey(tmp_to_remove);
     }
-    //freeGameKey(game_key); // is thie enough? or should i use every iteration?
-}    
+}   
 
 // function that set the score of each player in a tournament
 void setPlayersScore(TournamentData tournament_data)
@@ -220,7 +247,9 @@ void setPlayersScore(TournamentData tournament_data)
     {
         PlayerData player_data = (PlayerData)mapGet(tournament_data->players_map, player_key);
         player_data->score= ( 2*(player_data->num_wins) + 1*(player_data->num_draws) );
+        PlayerKey tmp_to_remove = player_key;
         player_key = (PlayerKey)mapGetNext(tournament_data->players_map);
+        freePlayerKey(tmp_to_remove);
     }
 }
 
